@@ -1,0 +1,7 @@
+Telescope name, longtitude(deg), latitude(deg),elevation(m), timezone
+
+Meerkat,21.44407,-30.71369,1050,Africa/Johannesburg
+askap,116.637,-26.696,377.83,Australia/Perth
+alma,-23.029,-67.755,5000,America/Santiago
+
+
