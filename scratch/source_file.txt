@@ -1,0 +1,4 @@
+source_name,ra,dec
+hydra_A,139d31m24.765s, -12d05m43.99s
+Sgr A, 17d45m40.03599s,-29d00m28.1699s
+CenA, 13d25m27.6s, -43d01m09s
