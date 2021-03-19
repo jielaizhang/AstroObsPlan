@@ -40,59 +40,106 @@ import numpy as np
 from pytz import common_timezones
 import matplotlib.pyplot as plt
 from datetime import datetime
-import datetime
+#import datetime
 import pyorbital
 import cv2
 #import colorama
 from colorama import Fore, Style
 pd.set_option("display.max_rows", None, "display.max_columns", None)
 
-
+%matplotlib inline
 
 
 
 #Specify paramenters
 #Co-vis type input 'max' for maximum co-vis or 'sum' for sum of all co-vis 
+#Saggitarius_A
+#ra='17h45m40.0409s'
+#dec='-29d0m28.118s'
 
-ra='09d18m06s'
-dec='-12d05m45s'
-source_name='hydra_A'
+#centA
+#ra='13h25m27.6s'
+#dec='-43d01m09s'
+
+
+#ra=38.0
+#dec=-63
+
+ra=9.301666666666668
+dec=-12.095833333333333
+source_name='Hydra_A'
+
+#source_name="Target"
 
 
 
-
-co_vis_type='sum' #'sum' or 'max'
+co_vis_type='max' #'sum' or 'max'
 time_interval=20
 low_airmasslim=1
 high_airmasslim=3
-#start_date = datetime.datetime(2021,1, 7, 18, 0)
-#end_date = datetime.datetime(2021, 1, 8, 6, 0)
+start_date = datetime(2021,3, 22, 00, 1)
+end_date = datetime(2021, 3, 22, 23, 59)
+
+#Moonphase plot dates
+import datetime
+moonphase_start_date = datetime.date(2021, 3, 1)
+moonphase_end_date   = datetime.date(2021, 3, 30)
+
+#start_date = Time('2021-06-07 00:01:00')
+#end_date= Time('2021-06-08 23:59:00')
+
+#Observatories
+
+#obs1_longitude=-70.81500000000001 
+#obs1_latitude=-30.165277777777778
+#obs1_elevation=2214.9999999993697
+#obs1_name='CTIO'
+
+obs1_longitude=-17.88508
+obs1_latitude= 28.75728
+obs1_elevation=2382
+obs1_name='Nordic-OT'
+
+#obs1_longitude=-21.44407 
+#obs1_latitude=-25.88975
+#obs1_elevation=1050
+#obs1_name='MeerKaT'
+
+#Observatory 2 parameters
 
 
-start_date = Time('2021-01-11 00:00:00')
-end_date= Time('2021-01-11 23:00:00')
+#obs2_longitude=27.68539
+#obs2_latitude=-31.273361111111104
+#obs2_elevation=1382
+#obs2_name='HartRaO'
 
 
-Obs1_longitude=-70.81500000000001 
-Obs1_latitude=-30.165277777777778
-obs1_elevation=2214.9999999993697
-obs1_name='CTIO'
+#obs2_longitude=116.637   #lontitude of observatory 2
+#obs2_latitude=-26.696   #latitude of observatory 2 
+#obs2_elevation=377.83   #elevation of observatory 2
+#obs2_name='ASKAP'       #name of observatory 2
+
+#obs2_longitude=149.06119444444445
+#obs2_latitude=-31.273361111111104
+#obs2_elevation=1149.0000000015516
+#obs2_name='KMTNET'
 
 
-obs2_longitude=149.06119444444445
-obs2_latitude=-31.273361111111104
-obs2_elevation=1149.0000000015516
-obs2_name='KMTNET'
+obs2_longitude=111.917778
+obs2_latitude=57.393056
+obs2_elevation=20
+obs2_name='Onsala'
 
-night_only_obs1= 'n' #'y'
+
+night_only_obs1= 'y' #'y'
 night_only_obs2= 'n' #'n'
 
 
 
 
-save_location= '/home/andrew/src/Transient-Scheduler/scratch/'
+save_location= '/home/andrew/Desktop/PASAE/presentation-internship/'
 
-target_coord = SkyCoord(ra, dec,  unit=(u.hourangle, u.deg))
+target_coord = SkyCoord(ra, dec, frame='icrs', unit=(u.deg, u.deg))
 
 target= FixedTarget(coord=target_coord, name=source_name)
 
@@ -100,42 +147,51 @@ target= FixedTarget(coord=target_coord, name=source_name)
 #Observatories
 
 
-obs1_coordinates = EarthLocation.from_geodetic(Obs1_longitude*u.deg,Obs1_latitude*u.deg,obs1_elevation*u.m)
-obs1= Observer(location=obs1_coordinates, name=obs1_name, timezone='Africa/Johannesburg')
+obs1_coordinates = EarthLocation.from_geodetic(obs1_longitude*u.deg,obs1_latitude*u.deg,obs1_elevation*u.m)
+obs1= Observer(location=obs1_coordinates, name=obs1_name, timezone='UTC')
 print(obs1)
 
 
 obs2_coordinates = EarthLocation.from_geodetic(obs2_longitude*u.deg,obs2_latitude*u.deg,obs2_elevation*u.m)
-obs2 = Observer(location=obs2_coordinates, name=obs2_name, timezone='Australia/Sydney')
+obs2 = Observer(location=obs2_coordinates, name=obs2_name, timezone='Europe/Stockholm')
 print(obs2)
 ##########################################################################################################
 
-
-moonphase_start_date = datetime.date(2021, 1, 1)
-moonphase_end_date   = datetime.date(2021, 2, 15)
-
 dates = [ moonphase_start_date+ datetime.timedelta(n) for n in range(int ((moonphase_end_date - moonphase_start_date).days))]
+#print(dates)
 
-delta_t = end_date - start_date
-dt = start_date + delta_t*np.linspace(0, 1,75)
-dt_datetime = [x.datetime for x in dt] 
 
-time1=dt_datetime[0]
-time2=dt_datetime[1]
-time_diff=time2-time1
-#print(time1,time2,)
-time_interval=time_diff.seconds/60
-#time_interval
 
+
+#Time intervals
+from datetime import datetime, timedelta
+
+def daterange(start_date, end_date):
+    delta = timedelta(minutes=time_interval)
+    while start_date < end_date:
+        yield start_date
+        start_date += delta
+        
+
+times=[]
+for single_date in daterange(start_date, end_date):
+    times.append(single_date.strftime("%Y-%m-%d %H:%M:%S"))
+dt=np.array(times)
+
+times=dt.astype(("datetime64[ns]"))
+delta=end_date-start_date
+total_mins = delta.total_seconds() / 60
+print(total_mins)   
 
 #dates
-
+#print(dt)
 
 
 #Get moonphases 
 moonphases=[]
 for i in dates:
     moonphases.append(moon.phase(i))
+    
 ##################################################################################################
 
 
@@ -159,9 +215,12 @@ dk={'datetimes':dt,'obs1_airmass':masked_airmass_obs1,'obs2_airmass':masked_airm
 #Calculate Moon positions
 
 from astropy.coordinates import get_moon
+
 #Generate moon positions 
+
+dt2=Time(dt)
 moon_radec=[]
-for i in dt:
+for i in dt2:
     get_moon(i)
     moon_radec.append(get_moon(i))
 
@@ -195,24 +254,32 @@ sep=np.array(sep)
 
 #######################################################################################################
 
-night_index=np.where(obs1.is_night(dt)==True)
+#Extracting the night times at obseratory 1
+night_index=np.where(obs1.is_night(dt,horizon= -12*u.deg)==True)
 night_ams_obs1=masked_airmass_obs1[night_index]
 times_x=np.array(dt)
 night_times_obs1=times_x[night_index]
-dt_nobs1=[x.datetime for x in night_times_obs1]
+#print('night times obs1:',night_times_obs1)
+
+dt_nobs1=([datetime.strptime(x, '%Y-%m-%d %H:%M:%S') for x in night_times_obs1])
 
 
-
-night_index_obs2=np.where(obs2.is_night(dt)==True)
+#Extracting the night times at obseratory 2
+night_index_obs2=np.where(obs2.is_night(dt,horizon= -12*u.deg)==True)
 night_ams_obs2=masked_airmass_obs2[night_index_obs2]
 
+
 night_times_obs2=times_x[night_index_obs2]
-dt_nobs2=[x.datetime for x in night_times_obs2]
+dt_nobs2=([datetime.strptime(x, '%Y-%m-%d %H:%M:%S')  for x in night_times_obs2])
 
+#print('night times obs2:',night_times_obs2)
 
+xc=obs1.is_night(dt,horizon= -12*u.deg)
+cc=obs2.is_night(dt,horizon= -12*u.deg)
+#print('xc',xc)
+#xx=pd.DataFrame(xc)
 
-xc=obs1.is_night(dt)
-cc=obs2.is_night(dt)
+#print(xx)
 
 
 dk={'datetimes':dt,'night_obs1':xc,'night_obs2':cc,
@@ -240,6 +307,7 @@ if night_only_obs1=='y'and night_only_obs2=='y':
 
     if len(covis_list)==0 or len(df)==0:
         mins=0
+        total_covis=mins
         print(f'{Fore.RED}No Co-Vis:Total time co-observable for {target_coord.ra.deg} and {target_coord.dec.deg} in minutes: {mins} mins{Style.RESET_ALL}')
 
     else:   
@@ -266,6 +334,7 @@ if night_only_obs1=='y'and night_only_obs2=='y':
         
         if len(cb)==0:
             fullmins=0
+            total_covis=fullmins
             print(f'{Fore.RED}No Co-Vis time for ra={target_coord.ra.deg} and dec={target_coord.dec.deg} Co-vis time: {fullmins} mins{Style.RESET_ALL}')
 
         else: 
@@ -275,9 +344,15 @@ if night_only_obs1=='y'and night_only_obs2=='y':
                 cvs.append((time_interval*i))
                 bgr_covis=np.max(cvs)
                 total_covis=sum(cvs)
+                
+            if co_vis_type=='sum':
+                print(f'{Fore.GREEN}Mulitiple ranges of Co-Vis time for ra={target_coord.ra.deg} and dec={target_coord.dec.deg} in minutes: {total_covis} mins{Style.RESET_ALL}')
+                total_covis = total_covis 
+            elif co_vis_type=='max':
+                print(f'{Fore.GREEN}Mulitiple ranges of Co-Vis time for ra={target_coord.ra.deg} and dec={target_coord.dec.deg} in minutes: {bgr_covis} mins{Style.RESET_ALL}')
+                total_covis = bgr_covis 
 
-            print(f'{Fore.GREEN}Mulitiple ranges of Co-Vis time for ra={target_coord.ra.deg} and dec={target_coord.dec.deg} in minutes: {total_covis} mins{Style.RESET_ALL}')  
-#########################################################################################
+ #########################################################################################
 
 
 elif night_only_obs1=='y'and night_only_obs2=='n':
@@ -290,13 +365,14 @@ elif night_only_obs1=='y'and night_only_obs2=='n':
     
     df=df.dropna()
     df.reset_index(drop=True, inplace=True)
-    print(df)
+    #print(df)
 
     covis_list=(df[df['obs1_airmass'].between(low_airmasslim,high_airmasslim) & df['obs2_airmass'].between(low_airmasslim,high_airmasslim)])
    
 
     if len(covis_list)==0 or len(df)==0:
         mins=0
+        total_covis=0
         print(f'{Fore.RED}No Co-Vis:Total time co-observable for {target_coord.ra.deg} and {target_coord.dec.deg} in minutes: {mins} mins{Style.RESET_ALL}')
 
     else:   
@@ -322,6 +398,7 @@ elif night_only_obs1=='y'and night_only_obs2=='n':
         cb=k[1][1:]
         if len(cb)==0:
             fullmins=0
+            total_covis=0
             print(f'{Fore.RED}No Co-Vis time for ra={target_coord.ra.deg} and dec={target_coord.dec.deg} Co-vis time: {fullmins} mins{Style.RESET_ALL}')
 
         else: 
@@ -331,9 +408,12 @@ elif night_only_obs1=='y'and night_only_obs2=='n':
                 cvs.append((time_interval*i))
                 bgr_covis=np.max(cvs)
                 total_covis=sum(cvs)
-
-            print(f'{Fore.GREEN}Mulitiple ranges of Co-Vis time for ra={target_coord.ra.deg} and dec={target_coord.dec.deg} in minutes: {total_covis} mins{Style.RESET_ALL}')  
-
+            if co_vis_type=='sum':
+                print(f'{Fore.GREEN}Mulitiple ranges of Co-Vis time for ra={target_coord.ra.deg} and dec={target_coord.dec.deg} in minutes: {total_covis} mins{Style.RESET_ALL}')
+                total_covis = total_covis 
+            elif co_vis_type=='max':
+                print(f'{Fore.GREEN}Mulitiple ranges of Co-Vis time for ra={target_coord.ra.deg} and dec={target_coord.dec.deg} in minutes: {bgr_covis} mins{Style.RESET_ALL}')
+                total_covis = bgr_covis 
 ####################################################################################################
         
 elif night_only_obs1=='n'and night_only_obs2=='y':
@@ -355,6 +435,7 @@ elif night_only_obs1=='n'and night_only_obs2=='y':
 
     if len(covis_list)==0 or len(df)==0:
         mins=0
+        total_covis=mins
         print(f'{Fore.RED}No Co-Vis:Total time co-observable for {target_coord.ra.deg} and {target_coord.dec.deg} in minutes: {mins} mins{Style.RESET_ALL}')
 
     else:   
@@ -380,6 +461,7 @@ elif night_only_obs1=='n'and night_only_obs2=='y':
         cb=k[1][1:]
         if len(cb)==0:
             fullmins=0
+            total_covis=fullmins
             print(f'{Fore.RED}No Co-Vis time for ra={target_coord.ra.deg} and dec={target_coord.dec.deg} Co-vis time: {fullmins} mins{Style.RESET_ALL}')
 
         else: 
@@ -389,9 +471,15 @@ elif night_only_obs1=='n'and night_only_obs2=='y':
                 cvs.append((time_interval*i))
                 bgr_covis=np.max(cvs)
                 total_covis=sum(cvs)
+                
+            if co_vis_type=='sum':
+                print(f'{Fore.GREEN}Mulitiple ranges of Co-Vis time for ra={target_coord.ra.deg} and dec={target_coord.dec.deg} in minutes: {total_covis} mins{Style.RESET_ALL}')
+                total_covis = total_covis 
+            elif co_vis_type=='max':
+                print(f'{Fore.GREEN}Mulitiple ranges of Co-Vis time for ra={target_coord.ra.deg} and dec={target_coord.dec.deg} in minutes: {bgr_covis} mins{Style.RESET_ALL}')
+                total_covis = bgr_covis 
 
-            print(f'{Fore.GREEN}Mulitiple ranges of Co-Vis time for ra={target_coord.ra.deg} and dec={target_coord.dec.deg} in minutes: {total_covis} mins{Style.RESET_ALL}') 
-    
+ #################################################################################################   
     
 elif night_only_obs1=='n'and night_only_obs2=='n':
     
@@ -412,6 +500,7 @@ elif night_only_obs1=='n'and night_only_obs2=='n':
 
     if len(covis_list)==0 or len(df)==0:
         mins=0
+        total_covis=mins
         print(f'{Fore.RED}No Co-Vis:Total time co-observable for {target_coord.ra.deg} and {target_coord.dec.deg} in minutes: {mins} mins{Style.RESET_ALL}')
 
     else:   
@@ -437,6 +526,7 @@ elif night_only_obs1=='n'and night_only_obs2=='n':
         cb=k[1][1:]
         if len(cb)==0:
             fullmins=0
+            total_covis=fullmins
             print(f'{Fore.RED}No Co-Vis time for ra={target_coord.ra.deg} and dec={target_coord.dec.deg} Co-vis time: {fullmins} mins{Style.RESET_ALL}')
 
         else: 
@@ -447,53 +537,65 @@ elif night_only_obs1=='n'and night_only_obs2=='n':
                 bgr_covis=np.max(cvs)
                 total_covis=sum(cvs)
 
-            print(f'{Fore.GREEN}Mulitiple ranges of Co-Vis time for ra={target_coord.ra.deg} and dec={target_coord.dec.deg} in minutes: {total_covis} mins{Style.RESET_ALL}') 
+            if co_vis_type=='sum':
+                print(f'{Fore.GREEN}Mulitiple ranges of Co-Vis time for ra={target_coord.ra.deg} and dec={target_coord.dec.deg} in minutes: {total_covis} mins{Style.RESET_ALL}')
+                total_covis = total_covis 
+            elif co_vis_type=='max':
+                print(f'{Fore.GREEN}Mulitiple ranges of Co-Vis time for ra={target_coord.ra.deg} and dec={target_coord.dec.deg} in minutes: {bgr_covis} mins{Style.RESET_ALL}')
+                total_covis = bgr_covis 
 
             
             
             
-fig, (ax, ax2) = plt.subplots(2,figsize=(20, 25))
+#fig, (ax) = plt.subplots(1,figsize=(15, 8))
 
-
+fig, (ax, ax2) = plt.subplots(2,figsize=(25, 21))
 #ax.set_figure(figsize=(15,8))
 
-fig.suptitle(f'CO-VISIBOLTY PLOT AND MOONPHASE PLOT FOR  {source_name.upper()} : {ra} AND {dec} AT {obs1.name.upper()} AND {obs2.name.upper()}  ')
+fig.suptitle(f'CO-VISIBILTY PLOT AND MOONPHASE PLOT FOR  {source_name.upper()} : {ra}, {dec} AT {obs1.name.upper()} AND {obs2.name.upper()}  ',fontsize=25)
 
-ax.set_title(f"Co-observability times of  {target.name.upper()} from  {start_date}  to "\
+ax.set_title(f"Co-observability times({co_vis_type}) of  {target.name.upper()}  from  {start_date}  to "\
            
-f" {end_date}. Total co-vis time is {total_covis} mins",fontsize=15)
-ax.plot(dt_datetime, masked_airmass_obs1, label='airmass@obs1',color='g',linewidth=3, alpha=0.9)
-ax.plot(dt_nobs1,night_ams_obs1,color='g',linewidth=6,alpha=0.9,label='Night times @obs1')#bolded regions for night time 
-ax.plot(dt_datetime, masked_airmass_obs2, color='r', label='airmass@obs2',linewidth=3, alpha=0.9)
-ax.plot(dt_nobs2,night_ams_obs2,color='r',linewidth=6,alpha=0.9,label='Night times @obs2')
+f" {end_date}. Total co-vis time is {total_covis} mins",fontsize=23)
+ax.plot(times, masked_airmass_obs1, label='airmass@obs1',color='C9',linewidth=3, alpha=0.9)
+ax.plot(dt_nobs1,night_ams_obs1,color='C9',linewidth=9,alpha=0.9,label='Night times @obs1')#bolded regions for night time 
+ax.plot(times, masked_airmass_obs2, color='b', label='airmass@obs2',linewidth=3, alpha=0.9)
+ax.plot(dt_nobs2,night_ams_obs2,color='b',linewidth=9,alpha=0.9,label='Night times @obs2')
+
 ax.invert_yaxis()
-ax.set_ylim([3,1])
-ax.set_ylabel('Airmasses', color='k',fontsize=14)
-ax.set_xlabel("Time from {0} [UTC]".format(min(dt_datetime).date()),fontsize=14)
+ax.set_ylim([3,0.5])
+ax.xaxis.set_tick_params(labelsize=18)
+ax.yaxis.set_tick_params(labelsize=18)
+ax.set_ylabel('Airmasses', color='k',fontsize=18)
+ax.set_xlabel(f"Time from {times[0]} [UTC]",fontsize=18)
 
 ax3 = ax.twinx()
 ax.axhspan(3, 2, facecolor='y', alpha=0.3,label='Bellow Airmass limit')
-ax3.plot(dt_datetime, sep, color='b',linestyle='--', label='moon_sep',linewidth=2, alpha=0.9)
-ax.legend(loc='best',prop={'size': 10})
-ax3.set_ylabel('Moon-target Seperation[degrees]',color='b',fontsize=14)
+ax3.yaxis.set_tick_params(labelsize=18)
+ax3.plot(times, sep, color='b',linestyle='--', label='moon_sep',linewidth=2, alpha=0.9)
+ax.legend(loc='best',prop={'size': 14})
+ax3.legend(loc=4,prop={'size': 14})
+ax3.set_ylabel('Moon-target Seperation[degrees]',color='b',fontsize=18)
 ax.grid()
 
 
 
 ax2.plot(dates,moonphases,linewidth=2.5,color='b',label='Moonphases')
-ax2.axhline(y=6.99,color='g',linestyle='--',linewidth=2,alpha=0.9)
-ax2.axhline(y = 14, color = 'r', linestyle = '--',linewidth=2,alpha=0.9) 
-ax2.axhline(y= 20.99, color = 'r', linestyle = '--',linewidth=2,alpha=0.9) 
-ax2.axhline(y = 27.99, color = 'b', linestyle = '--',alpha=0.9)
+ax2.xaxis.set_tick_params(labelsize=18)
+ax2.yaxis.set_tick_params(labelsize=18)
+ax2.axhline(y=6.99,color='m',linestyle='--',linewidth=2,alpha=0.9)
+ax2.axhline(y = 14, color = 'C1', linestyle = '--',linewidth=2,alpha=0.9) 
+ax2.axhline(y= 20.99, color = 'C1', linestyle = '--',linewidth=2,alpha=0.9) 
+ax2.axhline(y = 27.99, color = 'C3', linestyle = '--',alpha=0.9)
 #fills
 ax2.axhspan(0, 6.99, facecolor='cyan', alpha=0.25,label='Newmoon')
 ax2.axhspan(7, 13.99, facecolor='violet', alpha=0.25,label='First quarter')
 ax2.axhspan(14, 20.99, facecolor='gold', alpha=0.25,label='Fullmoon')
 ax2.axhspan(21, 27.99, facecolor='tomato', alpha=0.25,label='Last quarter')
 ax2.grid()
-ax2.set_title('Moon phases from '+str(dates[0])+' to '+str(dates[-1])+'')
-ax2.legend(loc='best',facecolor="w")
-plt.savefig(save_location+f"Co-vis times of {obs1.name.upper()} and {obs2.name} from  {start_date}  to "\
+ax2.set_title('Moon phases from '+str(dates[0])+' to '+str(dates[-1])+'',fontsize=20)
+ax2.legend(loc='best',facecolor="w",prop={'size': 14})
+plt.savefig(save_location+f"Co-vis times ({co_vis_type}) of {source_name} at {ra} & {dec} at {obs1.name.upper()} and {obs2.name} from  {start_date}  to "\
           
-          f" {end_date}  .png")
+        f" {end_date}  .png")
 plt.show()
