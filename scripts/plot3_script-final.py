@@ -49,7 +49,7 @@ pd.set_option("display.max_rows", None, "display.max_columns", None)
 #Specify paramenters
 #Co-vis type input 'max' for maximum co-vis or 'sum' for sum of all co-vis 
 
-save_location= '/home/andrew/Desktop/'  #Input location to save the plot
+save_location= '/Users/jielaizhang/Desktop/'  #Input location to save the plot
 
 
 #'''
@@ -59,21 +59,21 @@ save_location= '/home/andrew/Desktop/'  #Input location to save the plot
 #'''
 
 
+debug=False
+co_vis_type='max' 
 
-co_vis_type='sum' 
 
-
-RA_intervals=5
-DEC_intervals=5
+RA_intervals=10
+DEC_intervals=10
 
 time_interval=20  #Specify time intervals
 
 low_airmasslim=1  #Lower limit of airmass
-high_airmasslim=3 #Upper limit of airmass
+high_airmasslim=2.5 #Upper limit of airmass
 
 
-start_date = datetime(2021,6,7,    00, 1)  #Input START date and time of observation (format: YYYY,M,D,  H,M)
-end_date = datetime(2021, 6, 7,     23, 59)      #Input END date and time of observation (format: YYYY,M,D,  H,M)
+start_date = datetime(2022,4,10,    00, 1)       #Input START date and time of observation (format: YYYY,M,D,  H,M)
+end_date = datetime(2022, 4, 10,    23, 59)      #Input END date and time of observation (format: YYYY,M,D,  H,M)
 
 #Observatory 1 parameters
 
@@ -112,13 +112,19 @@ end_date = datetime(2021, 6, 7,     23, 59)      #Input END date and time of obs
 
 #Observatory 2 parameters
 
-obs1_longitude=116.637   #lontitude of observatory 2
-obs1_latitude=-26.696  #latitude of observatory 2 
-obs1_elevation=377.83   #elevation of observatory 2
-obs1_name='ASKAP'      #name of observatory 2
-timezone_obs1= 'Australia/Perth'
-night_only_obs1= 'n' #'y' 
+#obs1_longitude=116.637   #lontitude of observatory 2
+#obs1_latitude=-26.696  #latitude of observatory 2 
+#obs1_elevation=377.83   #elevation of observatory 2
+#obs1_name='ASKAP'      #name of observatory 2
+#timezone_obs1= 'Australia/Perth'
+#night_only_obs1= 'n' #'y' 
 
+obs1_longitude=-70.81500000000001       #lontitude of observatory 1 
+obs1_latitude=-30.165277777777778       #latitude of observatory 1 
+obs1_elevation=2214.9999999993697       #elevation of observatory 1
+obs1_name='CTIO'
+night_only_obs1= 'y' #'y'
+timezone_obs1= 'America/Santiago'
 
 obs2_longitude=-70.81500000000001       #lontitude of observatory 1 
 obs2_latitude=-30.165277777777778       #latitude of observatory 1 
@@ -245,7 +251,8 @@ for ii,r in enumerate(ra):
         
         # For the case night only observation for observatory 1 and 2 
         if night_only_obs1=='y'and night_only_obs2=='y':
-            print(f'Night only observation for BOTH Observatory {obs1.name.upper()} and {obs2.name.upper()}')
+            if debug:
+                print(f'Night only observation for BOTH Observatory {obs1.name.upper()} and {obs2.name.upper()}')
 
             dk={'datetimes':times,'night_obs1':xc,'night_obs2':cc,
                 'obs1_airmass':masked_airmass_obs1,'obs2_airmass':masked_airmass_obs2} #Create dictionary of values 
@@ -265,7 +272,8 @@ for ii,r in enumerate(ra):
 
             if len(covis_list)==0 or len(df)==0:
                 mins=0
-                print(f'{Fore.RED}No Co-Vis:Total time co-observable for {target_coord.ra.deg} and {target_coord.dec.deg} in minutes: {mins} mins{Style.RESET_ALL}')
+                if debug:
+                    print(f'{Fore.RED}No Co-Vis:Total time co-observable for {target_coord.ra.deg} and {target_coord.dec.deg} in minutes: {mins} mins{Style.RESET_ALL}')
                 bb[jj,ii] = mins 
             else:   
                 com_vals=np.array([(df['night_obs1'] == True) & (df['night_obs2'] == True)&df['obs1_airmass'].between(low_airmasslim,high_airmasslim) & df['obs2_airmass'].between(low_airmasslim,high_airmasslim)])
@@ -290,8 +298,8 @@ for ii,r in enumerate(ra):
 
                 cb=k[1][1:]
                 if len(cb)==0:
-                    
-                    print(f'{Fore.RED}No Co-Vis time for ra={target_coord.ra.deg} and dec={target_coord.dec.deg} Co-vis time: {0} mins{Style.RESET_ALL}')
+                    if debug:
+                        print(f'{Fore.RED}No Co-Vis time for ra={target_coord.ra.deg} and dec={target_coord.dec.deg} Co-vis time: {0} mins{Style.RESET_ALL}')
                     bb[jj,ii]=0
                 else: 
 
@@ -305,11 +313,13 @@ for ii,r in enumerate(ra):
                     
                     
                     if co_vis_type=='sum':
-                        print(f'{Fore.GREEN}Mulitiple ranges of Co-Vis time for ra={target_coord.ra.deg} and dec={target_coord.dec.deg} in minutes: {total_covis} mins{Style.RESET_ALL}')
+                        if debug:
+                            print(f'{Fore.GREEN}Mulitiple ranges of Co-Vis time for ra={target_coord.ra.deg} and dec={target_coord.dec.deg} in minutes: {total_covis} mins{Style.RESET_ALL}')
                         bb[jj,ii] = total_covis 
                     elif co_vis_type=='max':
                         #total_covis=bgr_covis
-                        print(f'{Fore.GREEN}Mulitiple ranges of Co-Vis time for ra={target_coord.ra.deg} and dec={target_coord.dec.deg} in minutes: {bgr_covis} mins{Style.RESET_ALL}')
+                        if debug:
+                            print(f'{Fore.GREEN}Mulitiple ranges of Co-Vis time for ra={target_coord.ra.deg} and dec={target_coord.dec.deg} in minutes: {bgr_covis} mins{Style.RESET_ALL}')
                         bb[jj,ii] = bgr_covis 
                         
         #########################################################################################
@@ -333,7 +343,8 @@ for ii,r in enumerate(ra):
 
             if len(covis_list)==0 or len(df)==0:
                 mins=0
-                print(f'{Fore.RED}No Co-Vis:Total time co-observable for {target_coord.ra.deg} and {target_coord.dec.deg} in minutes: {mins} mins{Style.RESET_ALL}')
+                if debug:
+                    print(f'{Fore.RED}No Co-Vis:Total time co-observable for {target_coord.ra.deg} and {target_coord.dec.deg} in minutes: {mins} mins{Style.RESET_ALL}')
                 bb[jj,ii] = mins 
             else:   
                 com_vals=np.array([(df['night_obs1'] == True) &df['obs1_airmass'].between(low_airmasslim,high_airmasslim) & df['obs2_airmass'].between(low_airmasslim,high_airmasslim)])
@@ -359,7 +370,8 @@ for ii,r in enumerate(ra):
                 cb=k[1][1:]
                 if len(cb)==0:
                     fullmins=0
-                    print(f'{Fore.RED}No Co-Vis time for ra={target_coord.ra.deg} and dec={target_coord.dec.deg} Co-vis time: {fullmins} mins{Style.RESET_ALL}')
+                    if debug:
+                        print(f'{Fore.RED}No Co-Vis time for ra={target_coord.ra.deg} and dec={target_coord.dec.deg} Co-vis time: {fullmins} mins{Style.RESET_ALL}')
                     bb[jj,ii]=fullmins
                 else: 
 
@@ -370,11 +382,13 @@ for ii,r in enumerate(ra):
                         total_covis=sum(cvs)
 
                     if co_vis_type=='sum':
-                        print(f'{Fore.GREEN}Mulitiple ranges of Co-Vis time for ra={target_coord.ra.deg} and dec={target_coord.dec.deg} in minutes: {total_covis} mins{Style.RESET_ALL}')
+                        if debug:
+                            print(f'{Fore.GREEN}Mulitiple ranges of Co-Vis time for ra={target_coord.ra.deg} and dec={target_coord.dec.deg} in minutes: {total_covis} mins{Style.RESET_ALL}')
                         bb[jj,ii] = total_covis 
                     elif co_vis_type=='max':
                         #total_covis=bgr_covis
-                        print(f'{Fore.GREEN}Mulitiple ranges of Co-Vis time for ra={target_coord.ra.deg} and dec={target_coord.dec.deg} in minutes: {bgr_covis} mins{Style.RESET_ALL}')
+                        if debug:
+                            print(f'{Fore.GREEN}Mulitiple ranges of Co-Vis time for ra={target_coord.ra.deg} and dec={target_coord.dec.deg} in minutes: {bgr_covis} mins{Style.RESET_ALL}')
                         bb[jj,ii] = bgr_covis 
         ####################################################################################################
         
@@ -399,7 +413,8 @@ for ii,r in enumerate(ra):
 
             if len(covis_list)==0 or len(df)==0:
                 mins=0
-                print(f'{Fore.RED}No Co-Vis:Total time co-observable for {target_coord.ra.deg} and {target_coord.dec.deg} in minutes: {mins} mins{Style.RESET_ALL}')
+                if debug:
+                    print(f'{Fore.RED}No Co-Vis:Total time co-observable for {target_coord.ra.deg} and {target_coord.dec.deg} in minutes: {mins} mins{Style.RESET_ALL}')
                 bb[jj,ii] = mins 
             else:   
                 com_vals=np.array([(df['night_obs2'] == True)&df['obs1_airmass'].between(low_airmasslim,high_airmasslim) & df['obs2_airmass'].between(low_airmasslim,high_airmasslim)])
@@ -425,7 +440,8 @@ for ii,r in enumerate(ra):
                 cb=k[1][1:]
                 if len(cb)==0:
                     fullmins=0
-                    print(f'{Fore.RED}No Co-Vis time for ra={target_coord.ra.deg} and dec={target_coord.dec.deg} Co-vis time: {fullmins} mins{Style.RESET_ALL}')
+                    if debug:
+                        print(f'{Fore.RED}No Co-Vis time for ra={target_coord.ra.deg} and dec={target_coord.dec.deg} Co-vis time: {fullmins} mins{Style.RESET_ALL}')
                     bb[jj,ii]=fullmins
                 else: 
 
@@ -436,11 +452,13 @@ for ii,r in enumerate(ra):
                         total_covis=sum(cvs)
 
                     if co_vis_type=='sum':
-                        print(f'{Fore.GREEN}Mulitiple ranges of Co-Vis time for ra={target_coord.ra.deg} and dec={target_coord.dec.deg} in minutes: {total_covis} mins{Style.RESET_ALL}')
+                        if debug:
+                            print(f'{Fore.GREEN}Mulitiple ranges of Co-Vis time for ra={target_coord.ra.deg} and dec={target_coord.dec.deg} in minutes: {total_covis} mins{Style.RESET_ALL}')
                         bb[jj,ii] = total_covis 
                     elif co_vis_type=='max':
                         #total_covis=bgr_covis
-                        print(f'{Fore.GREEN}Mulitiple ranges of Co-Vis time for ra={target_coord.ra.deg} and dec={target_coord.dec.deg} in minutes: {bgr_covis} mins{Style.RESET_ALL}')
+                        if debug:
+                            print(f'{Fore.GREEN}Mulitiple ranges of Co-Vis time for ra={target_coord.ra.deg} and dec={target_coord.dec.deg} in minutes: {bgr_covis} mins{Style.RESET_ALL}')
                         bb[jj,ii] = bgr_covis 
                         
          #########################################################################################################
@@ -464,7 +482,8 @@ for ii,r in enumerate(ra):
 
             if len(covis_list)==0 or len(df)==0:
                 mins=0
-                print(f'{Fore.RED}No Co-Vis:Total time co-observable for {target_coord.ra.deg} and {target_coord.dec.deg} in minutes: {mins} mins{Style.RESET_ALL}')
+                if debug:
+                    print(f'{Fore.RED}No Co-Vis:Total time co-observable for {target_coord.ra.deg} and {target_coord.dec.deg} in minutes: {mins} mins{Style.RESET_ALL}')
                 bb[jj,ii] = mins 
             else:   
                 com_vals=np.array([df['obs1_airmass'].between(low_airmasslim,high_airmasslim) & df['obs2_airmass'].between(low_airmasslim,high_airmasslim)])
@@ -490,7 +509,8 @@ for ii,r in enumerate(ra):
                 cb=k[1][1:]
                 if len(cb)==0:
                     fullmins=0
-                    print(f'{Fore.RED}No Co-Vis time for ra={target_coord.ra.deg} and dec={target_coord.dec.deg} Co-vis time: {fullmins} mins{Style.RESET_ALL}')
+                    if debug:
+                        print(f'{Fore.RED}No Co-Vis time for ra={target_coord.ra.deg} and dec={target_coord.dec.deg} Co-vis time: {fullmins} mins{Style.RESET_ALL}')
                     bb[jj,ii]=fullmins
                 else: 
 
@@ -502,11 +522,13 @@ for ii,r in enumerate(ra):
 
                      
                     if co_vis_type=='sum':
-                        print(f'{Fore.GREEN}Mulitiple ranges of Co-Vis time for ra={target_coord.ra.deg} and dec={target_coord.dec.deg} in minutes: {total_covis} mins{Style.RESET_ALL}')
+                        if debug:
+                            print(f'{Fore.GREEN}Mulitiple ranges of Co-Vis time for ra={target_coord.ra.deg} and dec={target_coord.dec.deg} in minutes: {total_covis} mins{Style.RESET_ALL}')
                         bb[jj,ii] = total_covis 
                     elif co_vis_type=='max':
                         #total_covis=bgr_covis
-                        print(f'{Fore.GREEN}Mulitiple ranges of Co-Vis time for ra={target_coord.ra.deg} and dec={target_coord.dec.deg} in minutes: {bgr_covis} mins{Style.RESET_ALL}')
+                        if debug:
+                            print(f'{Fore.GREEN}Mulitiple ranges of Co-Vis time for ra={target_coord.ra.deg} and dec={target_coord.dec.deg} in minutes: {bgr_covis} mins{Style.RESET_ALL}')
                         bb[jj,ii] = bgr_covis 
         
         
